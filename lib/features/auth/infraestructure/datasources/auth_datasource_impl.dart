@@ -15,9 +15,25 @@ class AuthDatasourceImpl extends AuthDatasource{
   ); //esto se puede optimizar creando un patron adaptador para envolver dio y solo usar ese patron y nos de la ventaja de poder cambiar por http sin
 
   @override
-  Future<User> checkAuthStatus(String token) {
-    throw UnimplementedError();
-    
+  Future<User> checkAuthStatus(String token) async{
+    try {
+        final response = await dio.get('/auth/check-status',
+        options: Options(
+          headers: {
+            'Athorization': 'Bearer $token'
+          }
+        )
+        );
+        final user = UserMapper.userJsonToEntity(response.data);
+        return user;
+    } on DioException catch (e) {
+      if(e.response?.statusCode == 401) {
+        throw CustomError('Token incorrecto' );
+      } 
+      throw Exception();
+    } catch (e){
+      throw Exception();
+    }    
   }
 
   @override
