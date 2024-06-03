@@ -11,7 +11,7 @@ class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context,ref) {
+  Widget build(BuildContext context, ref) {
     final appRouter = ref.watch(goRouterProvider);
     return MaterialApp.router(
       routerConfig: appRouter,
