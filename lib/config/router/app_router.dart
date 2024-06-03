@@ -3,11 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:teslo_shop/features/auth/auth.dart';
 import 'package:teslo_shop/features/auth/presentation/providers/auth_provider.dart';
 import 'package:teslo_shop/features/products/products.dart';
-
+import '../../features/products/presentation/screens/screens.dart';
 import 'app_router_notifier.dart';
 
 final goRouterProvider = Provider((ref) {
   final gorouterNotifier =  ref.watch(gorouterNotifierProvider);
+
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: gorouterNotifier,
@@ -30,6 +31,12 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(
+        path: '/product/:id',
+        builder: (context, state) => ProductScreen(
+          productId: state.params['id']??'no-id',
+        ),
       ),
     ],
     redirect: (context, state){
