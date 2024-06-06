@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:teslo_shop/config/config.dart';
+import 'package:teslo_shop/features/products/presentation/providers/providers.dart';
 import 'package:teslo_shop/features/shared/infrastructure/inputs/inputs.dart';
 
 import '../../../../shared/shared.dart';
@@ -10,16 +11,17 @@ import '../../../domain/domain.dart';
 final productFormProvider = StateNotifierProvider.autoDispose
 .family<ProductFormNotifier, ProductFormState, Product>(
   (ref, product) {
-  //TODO: createUpdateCallback
+  // final createUpdateCallback = ref.watch(productsRepositoryProvider).createUpdateProduct;
+  final createUpdateCallback = ref.watch(productsProvider.notifier).createUpdateProduct;
   return ProductFormNotifier(
-    product: product
-  //TODO: onSubmitCallback: createUpdateCallback
+    product: product,
+  onSubmitCallback: createUpdateCallback
   );
 },
 );
 
 class ProductFormNotifier extends StateNotifier<ProductFormState>{
-  final void Function(Map <String, dynamic> productLike)? onSubmitCallback;
+  final Future<bool> Function(Map <String, dynamic> productLike)? onSubmitCallback;
 
   ProductFormNotifier({
     this.onSubmitCallback,
@@ -41,7 +43,7 @@ images: product.images,
     if ( !state.isFormValid) return false;
     if ( onSubmitCallback == null) return false;
     final productLike = {
-  'id': state.id,
+  'id': (state.id == 'new')? null : state.id,
   'title': state.title.value,
   'price': state.price.value,
   'description': state.description,
@@ -54,8 +56,12 @@ images: product.images,
     (image) => image.replaceAll('${Environment.apiUrl}/files/product/', '')
   ).toList()
 };
-
-    return true;
+try {
+  await onSubmitCallback!(productLike);
+  return true; 
+} catch (e) {
+  return false;
+}
   }
   void _touchEverything() {
     state = state.copyWith(
@@ -68,17 +74,6 @@ images: product.images,
     );
   }
 
-  // void onTitleChanged(String value){
-  //   state.copyWith(
-  //     title: Title.dirty(value),
-  //     isFormValid: Formz.validate([
-  //       Title.dirty(value),
-  //       Slug.dirty(state.slug.value),
-  //       Price.dirty(state.price.value),
-  //       Stock.dirty(state.inStock.value),
-  //     ])
-  //   ); 
-  // }
   void onTitleChanged(String value){
   state = state.copyWith(
     title: Title.dirty(value),

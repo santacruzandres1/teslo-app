@@ -8,6 +8,13 @@ import '../../domain/domain.dart';
 class ProductScreen extends ConsumerWidget {
   final String productId;
   const ProductScreen({super.key, required this.productId});
+  void showSnackbar(BuildContext context){
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Producto Actualizado'))
+    );
+  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +33,12 @@ class ProductScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if(productState.product == null)return;
-          ref.watch(productFormProvider(productState.product!).notifier);
+          ref.read(
+            productFormProvider(productState.product!).notifier
+            ).onFormSubmit().then((value){
+              if ( !value ) return;
+              showSnackbar(context);
+            });
         },
         child: const Icon(Icons.save_as_outlined),
       ),
@@ -54,7 +66,11 @@ class _ProductView extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         Center(
-            child: Text(productForm.title.value, style: textStyles.titleSmall)),
+            child: Text(
+              productForm.title.value, 
+              style: textStyles.titleSmall,
+              textAlign: TextAlign.center,
+              )),
         const SizedBox(height: 10),
         _ProductInformation(product: product),
       ],
@@ -113,7 +129,7 @@ class _ProductInformation extends ConsumerWidget {
           const SizedBox(height: 5),
           _GenderSelector(
             selectedGender: productForm.gender,
-            onGenderChanged: ref.watch(productFormProvider(product).notifier).onGenderChanged,
+              onGenderChanged: ref.watch(productFormProvider(product).notifier).onGenderChanged,
             
             ),
           const SizedBox(height: 15),
@@ -159,19 +175,21 @@ class _SizeSelector extends StatelessWidget {
     required this.selectedSizes,
     required this.onSizedChanged,
   });
-
   @override
   Widget build(BuildContext context) {
     return SegmentedButton(
+      emptySelectionAllowed: true,
       showSelectedIcon: false,
       segments: sizes.map((size) {
         return ButtonSegment(
-            value: size,
-            label: Text(size, style: const TextStyle(fontSize: 10)));
-      }).toList(),
-      selected: Set.from(selectedSizes),
+          value: size, 
+          label: Text(size, style: const TextStyle(fontSize: 10))
+        );
+      }).toList(), 
+      selected: Set.from( selectedSizes ),
       onSelectionChanged: (newSelection) {
-        onSizedChanged(List.from(newSelection));
+        FocusScope.of(context).unfocus();
+        onSizedChanged( List.from(newSelection) );
       },
       multiSelectionEnabled: true,
     );
@@ -199,18 +217,19 @@ class _GenderSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SegmentedButton(
-        emptySelectionAllowed: false,
         multiSelectionEnabled: false,
         showSelectedIcon: false,
-        style: const ButtonStyle(visualDensity: VisualDensity.compact),
+        style: const ButtonStyle(visualDensity: VisualDensity.compact ),
         segments: genders.map((size) {
           return ButtonSegment(
-              icon: Icon(genderIcons[genders.indexOf(size)]),
-              value: size,
-              label: Text(size, style: const TextStyle(fontSize: 12)));
-        }).toList(),
-        selected: {selectedGender},
+            icon: Icon( genderIcons[ genders.indexOf(size) ] ),
+            value: size, 
+            label: Text(size, style: const TextStyle(fontSize: 12))
+          );
+        }).toList(), 
+        selected: { selectedGender },
         onSelectionChanged: (newSelection) {
+          FocusScope.of(context).unfocus();
           onGenderChanged(newSelection.first);
         },
       ),
